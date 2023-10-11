@@ -28,10 +28,12 @@
 #define INT_INPUT	       BIT(1)
 #define INT_OUTPUT	       BIT(2)
 
-#define REG_INPUT		0X10
+#define REG_BUSY		0X10
+
+#define REG_INPUT		0X14
 #define SIZE_INPUT		101
 
-#define REG_OUTPUT              0x75
+#define REG_OUTPUT              0x79
 #define SIZE_OUTPUT             65
 
 
@@ -199,6 +201,7 @@ typedef struct {
     uint32_t id;
     uint32_t init;
     uint32_t cmd;
+    uint32_t busy;
     uint32_t status;
     char input[SIZE_INPUT];
     char output[SIZE_OUTPUT];
@@ -264,6 +267,8 @@ static uint64_t virt_sha_read(void *opaque, hwaddr offset, unsigned size)
         return s->init;
     case REG_CMD:
         return s->cmd;
+    case REG_BUSY:
+        return s->busy;
     case REG_INT_STATUS:
         virt_sha_clr_irq(s);
         return s->status;
@@ -278,14 +283,13 @@ static void virt_sha_write(void *opaque, hwaddr offset, uint64_t value,
                           unsigned size)
 {
     VirtShaState *s = (VirtShaState *)opaque;
-
-	if(offset>=REG_INPUT && offset<REG_INPUT+SIZE_INPUT){
-		printf("M fun virt_foo_write mex: sto eseguendo la scrittura di REG_INPUT\n");
-		s->input[offset-REG_INPUT]=value;
-	       	if(value==0){
-			virt_sha_set_irq(s, INT_INPUT);
-		}
+    if(offset>=REG_INPUT && offset<REG_INPUT+SIZE_INPUT){
+	printf("M fun virt_foo_write mex: sto eseguendo la scrittura di REG_INPUT\n");
+	s->input[offset-REG_INPUT]=value;
+       	if(value==0){
+		virt_sha_set_irq(s, INT_INPUT);
 	}
+    }
 
     switch (offset) {
     case REG_INIT:
@@ -302,6 +306,9 @@ static void virt_sha_write(void *opaque, hwaddr offset, uint64_t value,
 		strcpy(s->output,hashStr);
 		virt_sha_set_irq(s, INT_OUTPUT);
         }
+	break;
+    case REG_BUSY:
+	s->busy = (int)value;
 	break;
     default:
         break;

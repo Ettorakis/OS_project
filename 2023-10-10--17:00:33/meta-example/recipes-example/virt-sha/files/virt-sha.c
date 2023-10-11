@@ -21,10 +21,12 @@
 #define IRQ_INPUT              BIT(1)
 #define IRQ_OUTPUT             BIT(2)
 
-#define REG_INPUT		0x10
+#define REG_BUSY		0x10
+
+#define REG_INPUT		0x14
 #define SIZE_INPUT		101
 
-#define REG_OUTPUT		0x75
+#define REG_OUTPUT		0x79
 #define SIZE_OUTPUT		65
 
 struct virt_sha {
@@ -98,6 +100,8 @@ static ssize_t vf_store_input(struct device *dev,
 		iowrite8(buf[i],vf->base+REG_INPUT+i);
 	}
 	iowrite8('\0',vf->base+REG_INPUT+i);
+	writel_relaxed(1, vf->base + REG_BUSY);
+
 
     return len;
 }
@@ -115,10 +119,21 @@ static ssize_t vf_show_output(struct device *dev,
 		i++;
 	}
 	output_driver[i]='\0';
+	writel_relaxed(0, vf->base + REG_BUSY);
 	return scnprintf(buf,SIZE_OUTPUT,"%s\n",output_driver);
+
 	//printk(KERN_INFO "M fun: vf_show_input stringa mex: output = %s\n",output_driver);
 
 	//return 1;
+}
+
+
+static ssize_t vf_show_busy(struct device *dev,
+               struct device_attribute *attr, char *buf)
+{
+    struct virt_sha *vf = dev_get_drvdata(dev);
+    u32 val = readl_relaxed(vf->base + REG_BUSY);
+    return scnprintf(buf, PAGE_SIZE, "Busy flag: %.x\n", val);
 }
 
 
@@ -126,6 +141,7 @@ static DEVICE_ATTR(id, S_IRUGO, vf_show_id, NULL);
 static DEVICE_ATTR(cmd, S_IRUGO | S_IWUSR, vf_show_cmd, vf_store_cmd);
 static DEVICE_ATTR(input, S_IRUGO | S_IWUSR, vf_show_input, vf_store_input);
 static DEVICE_ATTR(output, S_IRUGO, vf_show_output, NULL);
+static DEVICE_ATTR(busy, S_IRUGO, vf_show_busy, NULL);
 
 
 static struct attribute *vf_attributes[] = {
@@ -133,6 +149,7 @@ static struct attribute *vf_attributes[] = {
     &dev_attr_cmd.attr,
     &dev_attr_input.attr,
     &dev_attr_output.attr,
+    &dev_attr_busy.attr,
     NULL,
 };
 
