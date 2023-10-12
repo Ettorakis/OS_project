@@ -7,7 +7,6 @@
 #include <linux/platform_device.h>
 #include <linux/slab.h>
 #include <linux/sysfs.h>
-#include <linux/string.h>
 
 #define REG_ID            0x0
 
@@ -16,12 +15,12 @@
 
 #define REG_CMD            0x8
 
-#define REG_INT_STATUS        0xc
+#define REG_BUSY		0xc
+
+#define REG_INT_STATUS        0x10
 #define IRQ_ENABLED        BIT(0)
 #define IRQ_INPUT              BIT(1)
 #define IRQ_OUTPUT             BIT(2)
-
-#define REG_BUSY		0x10
 
 #define REG_INPUT		0x14
 #define SIZE_INPUT		101
@@ -40,7 +39,6 @@ static ssize_t vf_show_id(struct device *dev,
 {
     struct virt_sha *vf = dev_get_drvdata(dev);
     u32 val = readl_relaxed(vf->base + REG_ID);
-//    printk(KERN_INFO "M fun: vf_show_id\n");
     return scnprintf(buf, PAGE_SIZE, "Chip ID: 0x%.x\n", val);
 }
 
@@ -69,6 +67,15 @@ static ssize_t vf_store_cmd(struct device *dev,
 }
 
 
+static ssize_t vf_show_busy(struct device *dev,
+               struct device_attribute *attr, char *buf)
+{
+    struct virt_sha *vf = dev_get_drvdata(dev);
+    u32 val = readl_relaxed(vf->base + REG_BUSY);
+    return scnprintf(buf, PAGE_SIZE, "%.x\n", val);
+}
+
+
 static ssize_t vf_show_input(struct device *dev,
                struct device_attribute *attr, char *buf)
 {
@@ -83,10 +90,9 @@ static ssize_t vf_show_input(struct device *dev,
 		i++;
 	}
 	input_driver[i]='\0';
-	return scnprintf(buf,SIZE_INPUT,"%s\n",input_driver);
 	//printk(KERN_INFO "M fun: vf_show_input mex: input = %s\n",input_driver);
-	
-	//return 1;
+
+	return scnprintf(buf,SIZE_INPUT,"%s\n",input_driver);
 }
 
 static ssize_t vf_store_input(struct device *dev,
@@ -96,12 +102,12 @@ static ssize_t vf_store_input(struct device *dev,
     struct virt_sha *vf = dev_get_drvdata(dev);
     unsigned long val;
 	int i;
+//	writel_relaxed(1, vf->base + REG_BUSY);
 	for(i=0;i<len-1;i++){
 		iowrite8(buf[i],vf->base+REG_INPUT+i);
 	}
 	iowrite8('\0',vf->base+REG_INPUT+i);
 	writel_relaxed(1, vf->base + REG_BUSY);
-
 
     return len;
 }
@@ -119,21 +125,11 @@ static ssize_t vf_show_output(struct device *dev,
 		i++;
 	}
 	output_driver[i]='\0';
-	writel_relaxed(0, vf->base + REG_BUSY);
-	return scnprintf(buf,SIZE_OUTPUT,"%s\n",output_driver);
+	writel_relaxed(0,vf->base+REG_BUSY);
 
 	//printk(KERN_INFO "M fun: vf_show_input stringa mex: output = %s\n",output_driver);
-
+	return scnprintf(buf,SIZE_OUTPUT,"%s\n",output_driver);
 	//return 1;
-}
-
-
-static ssize_t vf_show_busy(struct device *dev,
-               struct device_attribute *attr, char *buf)
-{
-    struct virt_sha *vf = dev_get_drvdata(dev);
-    u32 val = readl_relaxed(vf->base + REG_BUSY);
-    return scnprintf(buf, PAGE_SIZE, "Busy flag: %.x\n", val);
 }
 
 
@@ -172,13 +168,13 @@ static irqreturn_t vf_irq_handler(int irq, void *data)
     status = readl_relaxed(vf->base + REG_INT_STATUS);
 
     if (status & IRQ_ENABLED)
-        dev_info(vf->dev, "HW is enabled\n");
+        dev_info(vf->dev, "ISR: HW is enabled\n");
 
-    if (status & IRQ_INPUT)
-	dev_info(vf->dev, "Input inserito\n");
+    if (status & IRQ_INPUT){}
+//	dev_info(vf->dev, "ISR: Input inserito\n");
 
-    if (status & IRQ_OUTPUT)
-	dev_info(vf->dev, "Output pronto\n");
+    if (status & IRQ_OUTPUT){}
+//	dev_info(vf->dev, "ISR: Output pronto\n");
 
     return IRQ_HANDLED;
 }
@@ -206,9 +202,10 @@ static int vf_probe(struct platform_device *pdev)
     vf->dev = dev;
     printk(KERN_INFO "M fun: vf_probe mex: copia dev\n");
 
+    printk(KERN_INFO "M fun: vf_probe mex: before ioremap vf.base=%p\n", vf->base);
     vf->base = devm_ioremap(dev, res->start, resource_size(res));
     printk(KERN_INFO "M fun: vf_probe mex: io_remap\n");
-    printk(KERN_INFO "M fun: vf_probe mex: ioremap vf.base=%p\n", vf->base);
+    printk(KERN_INFO "M fun: vf_probe mex: ioremap vf.base=%p  vf_start=%p\n", vf->base, res->start);
 
     if (!vf->base)
         return -EINVAL;
@@ -228,9 +225,10 @@ static int vf_probe(struct platform_device *pdev)
     printk(KERN_INFO "M fun: vf_probe mex: before call vf_init\n");
     vf_init(vf);
     printk(KERN_INFO "M fun: vf_probe mex: after call vf_init\n");
+    iowrite8(0,vf->base+REG_BUSY);
 
 
-    return sysfs_create_group(&dev->kobj, &vf_attr_group);
+   return sysfs_create_group(&dev->kobj, &vf_attr_group);
 }
 
 static int vf_remove(struct platform_device *pdev)

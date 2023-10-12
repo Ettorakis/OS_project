@@ -235,7 +235,7 @@ int main() {
                             return -2;
                         }
                         counter=0;
-                        while(fscanf(credential_file,"%s",tmp_credential)==EOF){
+                        while(fscanf(credential_file,"%s",tmp_credential)!=EOF){
                             counter+=1;
                             if(counter==entry_number){
                                 fprintf(tmp_file,"%s\n",output_sha256);

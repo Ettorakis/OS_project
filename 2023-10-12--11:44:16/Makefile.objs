@@ -1,4 +1,6 @@
+#common-obj-$(CONFIG_VIRT_FOO) += virt_foo.o
 common-obj-$(CONFIG_VIRT_SHA) += virt_sha.o
+#common-obj-$(CONFIG_VIRT_SHA256) += virt_sha256.o
 common-obj-$(CONFIG_APPLESMC) += applesmc.o
 common-obj-$(CONFIG_MAX111X) += max111x.o
 common-obj-$(CONFIG_TMP105) += tmp105.o

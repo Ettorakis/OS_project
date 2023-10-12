@@ -1,5 +1,11 @@
+#config VIRT_FOO
+#    bool
+
 config VIRT_SHA
     bool
+
+#config VIRT_SHA256
+#    bool
 
 config APPLESMC
     bool

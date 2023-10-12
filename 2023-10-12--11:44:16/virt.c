@@ -144,7 +144,8 @@ static const MemMapEntry base_memmap[] = {
     [VIRT_PCDIMM_ACPI] =        { 0x09070000, MEMORY_HOTPLUG_IO_LEN },
     [VIRT_ACPI_GED] =           { 0x09080000, ACPI_GED_EVT_SEL_LEN },
     [VIRT_MMIO] =               { 0x0a000000, 0x00000200 },
-    [VIRT_SHA] =                { 0x0b000000, 0x00000200 },
+//    [VIRT_FOO] =       		{ 0x0b000000, 0x00000200 },
+    [VIRT_SHA] =       		{ 0x0b040000, 0x00000200 },
     /* ...repeating for a total of NUM_VIRTIO_TRANSPORTS, each of that size */
     [VIRT_PLATFORM_BUS] =       { 0x0c000000, 0x02000000 },
     [VIRT_SECURE_MEM] =         { 0x0e000000, 0x01000000 },
@@ -184,7 +185,8 @@ static const int a15irqmap[] = {
     [VIRT_GIC_V2M] = 48, /* ...to 48 + NUM_GICV2M_SPIS - 1 */
     [VIRT_SMMU] = 74,    /* ...to 74 + NUM_SMMU_IRQS - 1 */
     [VIRT_PLATFORM_BUS] = 112, /* ...to 112 + PLATFORM_BUS_NUM_IRQS -1 */
-    [VIRT_SHA] = 176,
+//    [VIRT_FOO] = 176,
+    [VIRT_SHA] = 180,
 };
 
 static const char *valid_cpus[] = {
@@ -880,6 +882,7 @@ static void create_virtio_devices(const VirtMachineState *vms, qemu_irq *pic)
      * between kernel versions). For reliable and stable identification
      * of disks users must use UUIDs or similar mechanisms.
      */
+
     for (i = 0; i < NUM_VIRTIO_TRANSPORTS; i++) {
         int irq = vms->irqmap[VIRT_MMIO] + i;
         hwaddr base = vms->memmap[VIRT_MMIO].base + i * size;
@@ -914,6 +917,39 @@ static void create_virtio_devices(const VirtMachineState *vms, qemu_irq *pic)
 }
 
 
+static void create_virt_foo_device(const VirtMachineState *vms, qemu_irq *pic)
+{
+    hwaddr base = vms->memmap[VIRT_FOO].base;
+    hwaddr size = vms->memmap[VIRT_FOO].size;
+    int irq = vms->irqmap[VIRT_FOO];
+    char *nodename;
+
+    /*
+     * virt-foo@0b000000 {
+     *         compatible = "virt-foo";
+     *         reg = <0x0b000000 0x200>;
+     *         interrupt-parent = <&gic>;
+     *         interrupts = <176>;
+     * }
+     */
+
+    sysbus_create_simple("virt-foo", base, pic[irq]);
+
+    nodename = g_strdup_printf("/virt_foo@%" PRIx64, base);
+    qemu_fdt_add_subnode(vms->fdt, nodename);
+    qemu_fdt_setprop_string(vms->fdt, nodename, "compatible", "virt-foo");
+    qemu_fdt_setprop_sized_cells(vms->fdt, nodename, "reg", 2, base, 2, size);
+    qemu_fdt_setprop_cells(vms->fdt, nodename, "interrupt-parent",
+                           vms->gic_phandle);
+    qemu_fdt_setprop_cells(vms->fdt, nodename, "interrupts",
+                           GIC_FDT_IRQ_TYPE_SPI, irq,
+                           GIC_FDT_IRQ_FLAGS_LEVEL_HI);
+
+    g_free(nodename);
+}
+
+
+
 static void create_virt_sha_device(const VirtMachineState *vms, qemu_irq *pic)
 {
     hwaddr base = vms->memmap[VIRT_SHA].base;
@@ -921,9 +957,18 @@ static void create_virt_sha_device(const VirtMachineState *vms, qemu_irq *pic)
     int irq = vms->irqmap[VIRT_SHA];
     char *nodename;
 
+    /*
+     * virt-foo@0b000000 {
+     *         compatible = "virt-foo";
+     *         reg = <0x0b000000 0x200>;
+     *         interrupt-parent = <&gic>;
+     *         interrupts = <176>;
+     * }
+     */
+
     sysbus_create_simple("virt-sha-device", base, pic[irq]); //legame con virt_sha.c dove descrivo il device
 
-    nodename = g_strdup_printf("/virt_sha_nodename@%" PRIx64, base);
+    nodename = g_strdup_printf("/virt-sha-nodename@%" PRIx64, base);
     qemu_fdt_add_subnode(vms->fdt, nodename);
     qemu_fdt_setprop_string(vms->fdt, nodename, "compatible", "virt-sha-driver");	//legame con virt-sha.c in meta-example dove descrivo il driver e gli attributi
     qemu_fdt_setprop_sized_cells(vms->fdt, nodename, "reg", 2, base, 2, size);
@@ -935,6 +980,7 @@ static void create_virt_sha_device(const VirtMachineState *vms, qemu_irq *pic)
 
     g_free(nodename);
 }
+
 
 
 #define VIRT_FLASH_SECTOR_SIZE (256 * KiB)
@@ -1770,9 +1816,9 @@ static void machvirt_init(MachineState *machine)
      * no backend is created the transport will just sit harmlessly idle.
      */
     create_virtio_devices(vms, pic);
-    
-    create_virt_sha_device(vms, pic);
 
+//    create_virt_foo_device(vms, pic);
+    create_virt_sha_device(vms, pic);
     vms->fw_cfg = create_fw_cfg(vms, &address_space_memory);
     rom_set_fw(vms->fw_cfg);
 
