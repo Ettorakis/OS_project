@@ -11,7 +11,7 @@ int sha256_algorithm(char* input,int n, char* output);
 int sha256_inizialize();        //????
 int sha256_request(const char* input, int n);
 int sha256_get_output(char* output);
-int sha256_check_avaiability();
+int sha256_check_busy();
 
 
 #endif //SAFEREGISTRATION_SHA256_LIBRARY_H
