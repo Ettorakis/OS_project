@@ -1,0 +1,21 @@
+														CHECK?
+
+1) Esercitazione			
+	Terminare descrizione LAB1:	qemu ecc..		//MATTIA + ETTORE
+	Terminare descrizione LAB2:	test attibuti, libreria e test		//MATTIA + ETTORE
+	Terminare descrizione LAB3:	applicazione 				//ANDREA + ETTORE
+	Organizzare soluzioni: tree di cartelle  		//
+					-> lab1
+					-> lab2
+					-> lab3
+	
+2) GIT
+	organizzazione finale git						//ANDREA
+	caricate file esercitazioni + soluzioni
+	caricare powerpoint finale
+	Aggiunta licenze
+	Vedere codice 	MILO?							//MATTIA
+
+3) PowerPoint
+	Slide su accesso attributi						//MATTIA
+	Slide su problema applicazione						//ANDREA
