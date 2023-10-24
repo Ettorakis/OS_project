@@ -1,3 +1,10 @@
+/*
+ * Simulated Device Driver © 2023 by Andrea Bonino, Gabriele Fasolis, Mattia
+ * Mattiauda, Ettore Mondino, Federico Tartaglia is licensed under Attribution-
+ * NonCommercial 4.0 International. To view a copy of this license, visit 
+ * http://creativecommons.org/licenses/by-nc/4.0/
+ */
+
 // This file was created by andre on 03/10/2023.
 
 #include "./Sha256_library.h"   // Include a user-defined library for SHA-256.
