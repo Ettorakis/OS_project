@@ -256,5 +256,5 @@ static struct platform_driver vf_driver = {
 module_platform_driver(vf_driver);
 
 MODULE_DESCRIPTION("Virtual Sha Driver");
-MODULE_AUTHOR("Milo Kim");
+MODULE_AUTHOR("GRUPPO10");
 MODULE_LICENSE("GPL");
