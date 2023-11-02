@@ -43,6 +43,7 @@ Here's an overview of the project's directory structure:
 |       |-- Part3
 |-- PowerPoint_Presentation/
 |   |-- PPT_presentation.pptx/
+|-- Overleaf Projects - Lab experiences.zip
 |-- LICENSE.md
 |-- README.md
 ```
@@ -52,6 +53,8 @@ Here's an overview of the project's directory structure:
 - **Laboratory_Experience/**: This directory contains the documentation and the useful materials divided for each laboratory experience, and the relative solutions developed by us.
 
 - **PowerPoint_Presentation/**: This directory holds the power point presentation that contains the explanation of our project.
+
+-  **Overleaf Projects - Lab experiences.zip**: This is a zip file containing all the reports and materials realative to the laboratory experiences.
 
 - **LICENSE.md**: This is the license of this project.
 
